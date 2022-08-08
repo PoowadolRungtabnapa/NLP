@@ -13,5 +13,5 @@ lower_tokens = [t.lower() for t in tokens]
 #---Count tokens---#
 bow_simple = Counter(lower_tokens)
 
-#---Find 10 most common tokens---#
+#---Print 10 most common tokens---#
 print(bow_simple.most_common(10))
