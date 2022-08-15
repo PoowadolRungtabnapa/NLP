@@ -1,0 +1,21 @@
+<html>
+   <body>
+      <form action = "http://localhost:8080" method = "POST" 
+         enctype = "multipart/form-data">
+         <button name="subject" type="submit" value="Upload">UploadFile</button>
+</form>
+ <h1>File Name</h1>
+ {%for i in file%}
+ <p>{{i}}</p>
+ {%endfor%}
+ <h2>Top 5 Word TF-IDF</h2>
+ {%for i in word%}  
+ <p>{{i}}</p> 
+ {%endfor%}
+
+ <h2>Top 5 Word BOW</h2>
+ {%for i in bow%}  
+ <p>{{i}}</p> 
+ {%endfor%}
+   </body>
+</html>

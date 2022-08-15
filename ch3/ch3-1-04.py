@@ -2,7 +2,7 @@ from collections import Counter
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-f = open(".\wiki_article.txt","r")
+f = open(".\TextFile\wiki_article.txt","r")
 
 article = f.read()
 

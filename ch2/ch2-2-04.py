@@ -3,7 +3,7 @@ from multiprocessing.spawn import import_main_path
 from matplotlib import pyplot as plt
 from nltk.tokenize import word_tokenize, regexp_tokenize
 import re
-f = open(".\holy_grail.txt", "r")
+f = open(".\TextFile\holy_grail.txt", "r")
 holy_grail = f.read()
 
 lines = holy_grail.split('\n')
