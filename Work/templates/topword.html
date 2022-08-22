@@ -1,9 +1,27 @@
 <html>
-    <body>
-        <ol>
-        {%for i in range word %}
-            <li>{{i}}</li>
-        {%endfor%}
-        </ol>
-    </body>
+   <body>
+      <form action = "{{url_for('index')}}" method = "POST" >
+         <button name="subject" type="submit" value="Back">Back</button>
+      </form>
+
+      <form action = "{{url_for('topword')}}" method = "POST">
+      <input type="text" name="Search" placeholder="Search..">
+      <button type="submit" value="Submit">Submit</button>
+      <p>{{search}}</p>
+      </form>
+
+ <h1>File Name : {{file}}</h1>
+<p>{{contents}}</p>
+ <h2>Top 5 Word TF-IDF</h2>
+ {%for i in word%}  
+ <p>{{i}}</p> 
+ {%endfor%}
+
+ <h2>Top 5 Word BOW</h2>
+ {%for i in bow%}  
+ <p>{{i}}</p> 
+ {%endfor%}
+
+ <p>{{a}}</p>
+   </body>
 </html>
