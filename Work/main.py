@@ -52,10 +52,10 @@ def Articles(res) :
    for i in res :
       f = open(f".\Testupload\{i}", "r")
 
-      article = f.read()
+      content = f.read()
 
       #Tokenize the article : tokens
-      tokens = word_tokenize(article)
+      tokens = word_tokenize(content)
 
       #Convert the tokens into lowercase : lower_tokens
       lower_tokens = [t.lower() for t in tokens]
@@ -73,23 +73,41 @@ def Articles(res) :
       lemmatized = [wordnet_lemmatizer.lemmatize(t) for t in no_stops]
 
       articles.append(lemmatized)
+
    return articles
 
 @app.route('/topword', methods = ["GET", "POST"])
 def topword() :
    global filename, numberfile, articles
+   dir_path  = r"./Testupload"
+   res = []
+   for path in os.listdir(dir_path):
+      if os.path.isfile(os.path.join(dir_path, path)):
+         res.append(path)
+   content = Content(filename)
    if request.method == "POST" and "Search" in request.form :
       word = str(request.form.get("Search"))
-      return render_template('topword.html', word=tfidf_top_5(numberfile, articles), bow=bow_top_5(numberfile, articles), file=filename, search=Search(articles, numberfile, word))
+      return render_template('topword.html',contents=content, word=tfidf_top_5(numberfile, articles), bow=bow_top_5(numberfile, articles), file=filename, search=Search(articles, numberfile, word))
    
-   return render_template('topword.html', word=tfidf_top_5(numberfile, articles), bow=bow_top_5(numberfile, articles), file=filename, search="")
+   return render_template('topword.html', word=tfidf_top_5(numberfile, articles), bow=bow_top_5(numberfile, articles), file=filename, search="", contents=content)
+
+def Content(filename) :
+   f = open(f".\Testupload\{filename}", "r")
+
+   return f.read()
 
 def Search(articles, numberfile, word) :
    article = []
    article.append(articles[numberfile + 1])
+   for i in article :
+      word_counts = Counter(i)
+   
    dictionary = Dictionary(article)
    Word = dictionary.token2id.get(word.lower())
-   return dictionary.get(Word)
+   if dictionary.get(Word) != None or dictionary.get(word) != None:
+      return f"{word} have {word_counts[word.lower()]} words."
+   else :
+      return dictionary.get(Word)
 
 def tfidf_top_5(numberfile, articles) :
    #Create a Dictionary from the articles : dictionary
