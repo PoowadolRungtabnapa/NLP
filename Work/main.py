@@ -48,7 +48,7 @@ def index() :
       return render_template('index.html', file=res, fl="Not Have Any File")
 
 def Articles(res) :
-   articles = []
+   articles = [[]]
    for i in res :
       f = open(f".\Testupload\{i}", "r")
 
@@ -78,65 +78,42 @@ def Articles(res) :
 @app.route('/topword', methods = ["GET", "POST"])
 def topword() :
    global filename, numberfile, articles
-
    if request.method == "POST" and "Search" in request.form :
       word = str(request.form.get("Search"))
-      word.lower()
       return render_template('topword.html', word=tfidf_top_5(numberfile, articles), bow=bow_top_5(numberfile, articles), file=filename, search=Search(articles, numberfile, word))
    
    return render_template('topword.html', word=tfidf_top_5(numberfile, articles), bow=bow_top_5(numberfile, articles), file=filename, search="")
 
 def Search(articles, numberfile, word) :
    article = []
-   article.append(articles[numberfile])
+   article.append(articles[numberfile + 1])
    dictionary = Dictionary(article)
-   Word = dictionary.token2id.get(word)
+   Word = dictionary.token2id.get(word.lower())
    return dictionary.get(Word)
 
 def tfidf_top_5(numberfile, articles) :
    #Create a Dictionary from the articles : dictionary
    dictionary = Dictionary(articles)
-   print(articles)
    #Create a Corpus : corpus
    corpus = [dictionary.doc2bow(a) for a in articles]
-   if len(articles) != 1 :
-      #Save the second document : doc
-      doc = corpus[numberfile]
 
-      #Create a new TfidfModel using the corpus : tfidf
-      tfidf = TfidfModel(corpus)
+   #Save the second document : doc
+   doc = corpus[numberfile + 1]
 
-      #Calculate the tfidf weight of doc : tfidf_weights
-      tfidf_weight = tfidf[doc]
+   #Create a new TfidfModel using the corpus : tfidf
+   tfidf = TfidfModel(corpus)
 
-      print(tfidf_weight[:5])
+   #Calculate the tfidf weight of doc : tfidf_weights
+   tfidf_weight = tfidf[doc]
 
-      #Sort the weights from highest to lowest : sorted_tfidf_weights
-      sorted_tfidf_weight = sorted(tfidf_weight, key=lambda w: w[1], reverse=True)
+   #Sort the weights from highest to lowest : sorted_tfidf_weights
+   sorted_tfidf_weight = sorted(tfidf_weight, key=lambda w: w[1], reverse=True)
 
-      tfidf_word = []
+   tfidf_word = []
 
-      for term_id, weight in sorted_tfidf_weight[:5] :
-         tfidf_word.append(dictionary.get(term_id))
-      return tfidf_word
-   else :
-      #Save the second document : doc
-      doc = corpus[0]
-      #Create a new TfidfModel using the corpus : tfidf
-      tfidf = TfidfModel(corpus)
-
-      #Calculate the tfidf weight of doc : tfidf_weights
-      tfidf_weight = tfidf[doc]
-
-      #Sort the weights from highest to lowest : sorted_tfidf_weights
-      sorted_tfidf_weight = sorted(tfidf_weight, key=lambda w: w[1], reverse=True)
-
-      tfidf_word = []
-
-      for term_id, weight in sorted_tfidf_weight[:5] :
-         tfidf_word.append(dictionary.get(term_id))
-
-      return tfidf_word
+   for term_id, weight in sorted_tfidf_weight[:5] :
+      tfidf_word.append(dictionary.get(term_id))
+   return tfidf_word
 
 def bow_top_5(numberfile, articles) :
 
@@ -147,7 +124,7 @@ def bow_top_5(numberfile, articles) :
    corpus = [dictionary.doc2bow(a) for a in articles]
 
    #Save the second document : doc
-   doc = corpus[numberfile]
+   doc = corpus[numberfile + 1]
    
    #sort the doc for frequency : bow_doc
    bow_doc = sorted(doc, key=lambda w: w[1], reverse=True)
