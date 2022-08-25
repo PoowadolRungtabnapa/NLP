@@ -2,6 +2,9 @@ from collections import Counter
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+from gensim.corpora.dictionary import Dictionary
+from collections import defaultdict
+from gensim.models.tfidfmodel import TfidfModel
 
 articles = []
 for i in range(10) :
@@ -30,4 +33,22 @@ for i in range(10) :
 
     articles.append(lemmatized)
 
-print(articles[1]) 
+dictionary = Dictionary(articles)
+
+corpus = [dictionary.doc2bow(a) for a in articles]
+
+doc = corpus[1]
+
+bow_doc = sorted(doc, key=lambda w: w[1], reverse=True)
+
+for word_id, word_count in bow_doc[:5] :
+    print(dictionary.get(word_id), word_count)
+
+tfidf = TfidfModel(corpus)
+
+tfidf_weights = tfidf[doc]
+
+sorted_tfidf_weights = sorted(tfidf_weights, key=lambda w: w[1], reverse=True)
+
+for term_id, weight in sorted_tfidf_weights[:5] :
+    print(dictionary.get(term_id), weight)
