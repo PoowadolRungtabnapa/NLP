@@ -1,0 +1,41 @@
+<html>
+   <body>
+      <h1>{{FileName}}</h1>
+      <h1>Upload Your File</h1>
+      <form action = "/" method = "POST" 
+         enctype = "multipart/form-data" id="upload">
+         <input type = "file" name = "file" />
+         <input type = "submit"/>
+      </form>   
+
+      <h1>Select Your File</h1>
+      <form action = "/" id="text" method = "POST" 
+         enctype = "multipart/form-data">
+      <select id="text" name="text" form="text">
+         {%for i in file%}
+  <option value="{{i}}">{{i}}</option>
+         {%endfor%}
+      </select>
+         <input type = "submit"/>
+      </form>
+
+      <form action = "/" method = "POST">
+         <input type="text" name="Search" placeholder="Search..">
+         <button type="submit">Search</button>
+         <p>{{search}}</p>
+      </form>
+
+      <h2>Top 5 Word TF-IDF</h2>
+         {%for i in word%}  
+         <p>{{i}}</p> 
+         {%endfor%}
+
+         <h2>Top 5 Word BOW</h2>
+         {%for i in bow%}  
+         <p>{{i}}</p> 
+         {%endfor%}
+
+      <h1>Your Text File</h1>
+      <p>{{Text|markdown}}</p>
+   </body>
+</html>
