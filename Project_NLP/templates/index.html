@@ -1,0 +1,60 @@
+<head>
+  <link rel="stylesheet" href="{{ url_for ('static', filename='css/style.css') }}" >
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Project NLP</title>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>Project NLP</h1>
+  </div>
+
+  <div class="topnav">
+    <a href="{{url_for('index')}}">Home</a>
+  </div>
+
+    <div class="columnfile">
+      <h2 class="topic">Upload File</h2>
+
+    <div class="Input">
+      <form class="center" action = "/" method = "POST" enctype = "multipart/form-data" id="upload">
+              <input class="textstlye" type = "file" name = "file" />
+              <input type = "submit"/>
+        </form>
+    </div>
+
+    <h2 class="topic">Select File</h2>
+
+    <div class="Input">
+      <form class="center" id="SF" action = "/"  method = "POST" enctype = "multipart/form-data" id="SF">
+          <label class="textstlye" for="cars">Choose Your Files : </label>
+          <select class="selectfile" id="SF" name="SF">
+            {%for i in file%}
+            <option class="textchoose" value="{{i}}">{{i}}</option>
+            {%endfor%}
+          </select>
+          <input type="submit">
+        </form>
+    </div>
+
+    <h2 class="topic">Delete File</h2>
+
+    <div class="Input">
+      <form class="center" id="DF" action = "/" method = "POST" enctype = "multipart/form-data" id="SF">
+        <label class="textstlye" for="cars">Choose Your Files : </label>
+        <select class="selectfile" id="DF" name="DF">
+          {%for i in file%}
+          <option class="textchoose" value="{{i}}">{{i}}</option>
+          {%endfor%}
+        </select>
+        <input type="submit">
+        </form>
+    </div>
+
+    </div> 
+
+  
+
+</body>
+</html>

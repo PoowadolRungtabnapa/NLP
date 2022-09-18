@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<link rel="stylesheet" href="{{ url_for ('static', filename='css/style.css') }}" >
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Project NLP</title>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>Project NLP</h1>
+  </div>
+
+  <div class="topnav">
+    <a href="{{url_for('index')}}">Home</a>
+  </div>
+
+  <div class="row">
+    <div class="columnlayout">
+      <h2>Text File : {{FileName}}</h2> 
+
+        <div class="columnlayin">
+          <p class="textcontent">
+            {{TextContent}}
+          </p>
+        </div>
+
+    </div>
+    
+    <div class="columnlayout">
+
+      <div class="row">
+        <h2>Top 5 Back Of Word</h2>
+
+        <div class="columnlayin">
+          {%for i in Bow%}
+          <p class="topword">{{i}}</p>
+          {%endfor%}
+        </div>
+        
+      </div>
+
+      <div class="row">
+        <h2>Top 5 TF-IDF</h2>
+
+        <div class="columnlayin">
+          {%for i in TFIDF%}
+          <p class="topword">{{i}}</p>
+          {%endfor%}
+        </div>
+        
+      </div>
+
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="columnlayoutseachword">
+      <h2>Seach Word</h2>
+      
+      <div class="columnlayin">
+        <form action="/function" id="search" method="POST">
+          <input type="text" id="search" name="search" placeholder="Search Word">
+          <input type="submit">
+        </form>      
+        <p class="topword">{{searchword}}</p>
+      </div>
+      
+    </div>
+    
+    <div class="columnlayout">
+      <h2>Entity labels (select)</h2>
+    
+    <div class="columnlayoutcheckbox">
+      <form action="/function" id="checkbox" method = "POST">
+          <input type="checkbox" id="PERSON" value="PERSON" name="checkbox">
+          <label class="container" id="PERSON" value="PERSON" >PERSON
+          <span class="checkmark" id=""></span>
+          </label>
+          <input type="checkbox" id="NORP" value="NORP" name="checkbox" >
+          <label class="container" id="NORP" value="NORP">NORP
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="ORG" value="ORG" name="checkbox" >
+          <label class="container" id="ORG" value="ORG">ORG
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox"id="GPE" value="GPE" name="checkbox">
+          <label class="container" id="GPE" value="GPE">GPE
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="LOC" value="LOC" name="checkbox">
+          <label class="container" id="LOC" value="LOC">LOC
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="PRODUCT" value="PRODUCT" name="checkbox">
+          <label class="container" id="PRODUCT" value="PRODUCT">PRODUCT
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="EVENT" value="EVENT" name="checkbox">
+          <label class="container" id="EVENT" value="EVENT">EVENT
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="WORK_OF_ART" value="WORK_OF_ART" name="checkbox">
+          <label class="container" id="WORK_OF_ART" value="WORK_OF_ART">WORK OF ART
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="LANGUAGE" value="LANGUAGE" name="checkbox">
+          <label class="container" id="LANGUAGE" value="LANGUAGE">LANGUAGE
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="DATE" value="DATE" name="checkbox">
+          <label class="container" id="DATE" value="DATE">DATE
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="TIME" value="TIME" name="checkbox">
+          <label class="container" id="TIME" value="TIME">TIME
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="PERCENT" value="PERCENT" name="checkbox">
+          <label class="container" id="PERCENT" value="PERCENT">PERCENT
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="MONEY" value="MONEY" name="checkbox">
+          <label class="container" id="MONEY" value="MONEY">MONEY
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="QUANTITY" value="QUANTITY" name="checkbox">
+          <label class="container" id="QUANTITY" value="QUANTITY">QUANTITY
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="ORDINAL" value="ORDINAL" name="checkbox">
+          <label class="container" id="ORDINAL" value="ORDINAL">ORDINAL
+          <span class="checkmark"></span>
+          </label>
+          <input type="checkbox" id="CARDINAL" value="CARDINAL" name="checkbox">
+          <label class="container" id="CARDINAL" value="CARDINAL">CARDINAL
+          <span class="checkmark"></span>
+          </label>
+        </div> 
+      <input type="submit">  
+      </div>
+       
+        </form>
+        
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="columnlayoutner">
+      <h2>Name Entity Recognition</h2>
+        <div class="CLNERC">
+            <p class="textcontentner">
+            {{TextContentNer|markdown}}
+          </p>
+        </div>
+    </div>
+  </div>
+</body>
+</html>

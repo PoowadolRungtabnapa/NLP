@@ -1,18 +1,13 @@
-from ast import Not
-from re import search
+from fileinput import filename
 from flask import Flask, render_template, request, flash, redirect, url_for
-from matplotlib import artist
 from werkzeug.utils import secure_filename
 import os
-import time
-import itertools
 from gensim.corpora.dictionary import Dictionary
 
-from collections import Counter
+
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
-from collections import defaultdict
 
 from gensim.models.tfidfmodel import TfidfModel
 
@@ -25,33 +20,40 @@ app = Flask(__name__)
 Markdown(app)
 app.secret_key = 'secret'
 
-uploads_dir = "Web_Ner/Upload"
+uploads_dir = "Project_NLP/Upload"
 app.config['UPLOAD_FOLDER'] = uploads_dir
 
 nlp = spacy.load("en_core_web_sm")
 status = 0
 @app.route('/', methods = ["GET", "POST"])
 def index() :
-    global status, Text
+    global filename
     res = Read_file()
     if len(res) != 0 :
         if request.method == "POST" :
+            #Upload Function
             if "file" in request.files and request.files['file'].filename != "":
-                print(request.files['file'])
                 uploader(request.files['file'])
+                print(f"Upload Name : {request.files['file']} Done")
                 return redirect('/')
+
             if "Search" in request.form and status == 0:
                 return render_template('index.html', file=res, Text="!!!Select Your Text First!!!", word=["Select Your Text First"], bow=["Select Your Text First"], search="Select File First")
-            if "text" in request.form :
-                status = 1
-                Text = request.form.get('text')
-                f = open(f"Web_Ner/Upload/{Text}", "r")
-                text = f.read()
-                doc = nlp(text)
-                articles = Articles(Text)
-                return render_template('index.html',FileName =f"FileName : {Text}", file=res, Text=displacy.render(doc, style="ent"), word=tfidf_top_5(articles), bow=bow_top_5(articles), search="No Word")
+            
+
+            #Select Function
+            if "SF" in request.form :
+                filename = request.form.get('SF')
+                Text = request.form.get('SF')
+                print('Selection File In Name :',request.form.get('SF'))
+                return functionmenu()
+            #Delete Function
+            if "DF" in request.form :
+                os.remove(f"Project_NLP/Upload/{request.form.get('DF')}")
+                return redirect('/')
+
             if "Search" in request.form and status == 1:
-                f = open(f"Web_Ner/Upload/{Text}", "r")
+                f = open(f"Project_NLP/Upload/{Text}", "r")
                 text = f.read()
                 doc = nlp(text)
                 articles = Articles(Text)
@@ -61,12 +63,36 @@ def index() :
     else :
         if request.method == "POST" :
             if "file" in request.files :
-                print("Upload")
+                print("Upload Done")
                 uploader(request.files['file'])
                 return redirect('/')
             if "Search" in request.form :
                 return render_template('index.html', file=["!!!Not Have Any File Here!!!"], Text="!!!Select Your Text First!!!", word=["Select Your Text First"], bow=["Select Your Text First"], search="Upload File and Select File First")
         return render_template('index.html', file=["!!!Not Have Any File Here!!!"], Text="!!!Select Your Text First!!!", word=["Select Your Text First"], bow=["Select Your Text First"])
+
+@app.route('/function', methods=["GET","POST"])
+def functionmenu() :
+    global filename
+     
+    # Read File Content
+    filecontent = open(f"Project_NLP/Upload/{filename}", "r")
+    Text = filecontent.read()
+    doc = nlp(Text)
+    articles = Articles(filename)
+    print(f"Read Content in File : {filename} Success")
+    TFIDF = tfidf_top_5(articles)
+    BOW = bow_top_5(articles)
+    if request.method == "POST" :
+        if "checkbox" in request.form :
+            options = {"ents": request.form.getlist('checkbox')}
+            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent", options=options))
+        if "search" in request.form :
+            print(f"Search : {request.form.get('search')}")
+            word = Search(articles,request.form.get('search'))
+            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), searchword=word)
+        return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"))
+    else :
+        return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"))
 
 def Search(articles, word) :
     article = (articles[1])
@@ -77,7 +103,7 @@ def Search(articles, word) :
 
 def Articles(Filename) :
     articles = [[]]
-    f = open(f"Web_Ner/Upload/{Filename}", "r")
+    f = open(f"Project_NLP/Upload/{Filename}", "r")
 
     article = f.read()
 
@@ -101,56 +127,63 @@ def Articles(Filename) :
 
     articles.append(lemmatized)
 
+    print(f'Find Word Tokens in File : {Filename} Success')
+
     return articles
 
 def tfidf_top_5(articles) :
-   #Create a Dictionary from the articles : dictionary
-   dictionary = Dictionary(articles)
-   #Create a Corpus : corpus
-   corpus = [dictionary.doc2bow(a) for a in articles]
+    #Create a Dictionary from the articles : dictionary
+    dictionary = Dictionary(articles)
+    #Create a Corpus : corpus
+    corpus = [dictionary.doc2bow(a) for a in articles]
 
-   #Save the second document : doc
-   doc = corpus[1]
+    #Save the second document : doc
+    doc = corpus[1]
 
-   #Create a new TfidfModel using the corpus : tfidf
-   tfidf = TfidfModel(corpus)
+    #Create a new TfidfModel using the corpus : tfidf
+    tfidf = TfidfModel(corpus)
 
-   #Calculate the tfidf weight of doc : tfidf_weights
-   tfidf_weight = tfidf[doc]
+    #Calculate the tfidf weight of doc : tfidf_weights
+    tfidf_weight = tfidf[doc]
 
-   #Sort the weights from highest to lowest : sorted_tfidf_weights
-   sorted_tfidf_weight = sorted(tfidf_weight, key=lambda w: w[1], reverse=True)
+    #Sort the weights from highest to lowest : sorted_tfidf_weights
+    sorted_tfidf_weight = sorted(tfidf_weight, key=lambda w: w[1], reverse=True)
 
-   tfidf_word = []
+    tfidf_word = []
 
-   for term_id, weight in sorted_tfidf_weight[:5] :
-      tfidf_word.append(dictionary.get(term_id))
-   return tfidf_word
+    for term_id, weight in sorted_tfidf_weight[:5] :
+        tfidf_word.append(dictionary.get(term_id))
+
+    print(f'Find Top 5 TF-IDF Success')
+
+    return tfidf_word
 
 def bow_top_5(articles) :
 
-   #Create a Dictionary from the articles : dictionary
-   dictionary = Dictionary(articles)
+    #Create a Dictionary from the articles : dictionary
+    dictionary = Dictionary(articles)
 
-   #Create a Corpus : corpus
-   corpus = [dictionary.doc2bow(a) for a in articles]
+    #Create a Corpus : corpus
+    corpus = [dictionary.doc2bow(a) for a in articles]
 
-   #Save the second document : doc
-   doc = corpus[1]
-   
-   #sort the doc for frequency : bow_doc
-   bow_doc = sorted(doc, key=lambda w: w[1], reverse=True)
+    #Save the second document : doc
+    doc = corpus[1]
+    
+    #sort the doc for frequency : bow_doc
+    bow_doc = sorted(doc, key=lambda w: w[1], reverse=True)
 
-   bow = []
+    bow = []
 
-   #Print the top 5 words of the document alongside the count
-   for word_id, word_count in bow_doc[:5] :
-      bow.append(dictionary.get(word_id))
+    #Print the top 5 words of the document alongside the count
+    for word_id, word_count in bow_doc[:5] :
+        bow.append(dictionary.get(word_id))
 
-   return bow
+    print(f'Find Top 5 Bow Success')
+
+    return bow
 
 def Read_file() :
-    dir_path  = "Web_Ner/Upload"
+    dir_path  = "Project_NLP/Upload"
     res = []
     for path in os.listdir(dir_path):
         if os.path.isfile(os.path.join(dir_path, path)):
@@ -162,4 +195,4 @@ def uploader(f) :
     f.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
 if __name__ == '__main__':
-   app.run(debug = True,host="127.0.0.2", port="8080")
+    app.run(host="0.0.0.0")
