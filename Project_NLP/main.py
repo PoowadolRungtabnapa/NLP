@@ -4,7 +4,6 @@ from werkzeug.utils import secure_filename
 import os
 from gensim.corpora.dictionary import Dictionary
 
-
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
@@ -16,6 +15,9 @@ from spacy import displacy
 
 from flaskext.markdown import Markdown
 
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+
 app = Flask(__name__)
 Markdown(app)
 app.secret_key = 'secret'
@@ -23,11 +25,16 @@ app.secret_key = 'secret'
 uploads_dir = "Project_NLP/Upload"
 app.config['UPLOAD_FOLDER'] = uploads_dir
 
+model_path = "ch5/fake-news-bert-base-uncased"
+
+model = AutoModelForSequenceClassification.from_pretrained(model_path)
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+
 nlp = spacy.load("en_core_web_sm")
 status = 0
 @app.route('/', methods = ["GET", "POST"])
 def index() :
-    global filename
+    global filename, Text
     res = Read_file()
     if len(res) != 0 :
         if request.method == "POST" :
@@ -39,15 +46,20 @@ def index() :
 
             if "Search" in request.form and status == 0:
                 return render_template('index.html', file=res, Text="!!!Select Your Text First!!!", word=["Select Your Text First"], bow=["Select Your Text First"], search="Select File First")
-            
 
             #Select Function
             if "SF" in request.form :
                 filename = request.form.get('SF')
-                Text = request.form.get('SF')
                 print('Selection File In Name :',request.form.get('SF'))
+                Text = open(f"Project_NLP/Upload/{filename}", "r")
                 return functionmenu()
-            #Delete Function
+            # Input Text
+            if "Input_Text" in request.form :
+                Text = request.form.get('Input_Text')
+                filename = ""
+                print('Input Text Success')
+                return functionmenu()
+            # Delete Function
             if "DF" in request.form :
                 os.remove(f"Project_NLP/Upload/{request.form.get('DF')}")
                 return redirect('/')
@@ -72,27 +84,66 @@ def index() :
 
 @app.route('/function', methods=["GET","POST"])
 def functionmenu() :
-    global filename
+    global filename, Text
      
     # Read File Content
-    filecontent = open(f"Project_NLP/Upload/{filename}", "r")
-    Text = filecontent.read()
-    doc = nlp(Text)
-    articles = Articles(filename)
-    print(f"Read Content in File : {filename} Success")
-    TFIDF = tfidf_top_5(articles)
-    BOW = bow_top_5(articles)
-    if request.method == "POST" :
-        if "checkbox" in request.form :
-            options = {"ents": request.form.getlist('checkbox')}
-            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent", options=options))
-        if "search" in request.form :
-            print(f"Search : {request.form.get('search')}")
-            word = Search(articles,request.form.get('search'))
-            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), searchword=word)
-        return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"))
+    if filename != "" :
+        filecontent = open(f"Project_NLP/Upload/{filename}", "r")
+        Text = filecontent.read()
+        doc = nlp(Text)
+        articles = Articles()
+        print(f"Read Content in File : {filename} Success")
+        TFIDF = tfidf_top_5(articles)
+        BOW = bow_top_5(articles)
+        prediction = get_prediction(Text, convert_to_label=True)
+        if request.method == "POST" :
+            if "checkbox" in request.form :
+                options = {"ents": request.form.getlist('checkbox')}
+                return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent", options=options), Prediction=prediction)
+            if "search" in request.form :
+                print(f"Search : {request.form.get('search')}")
+                word = Search(articles,request.form.get('search'))
+                return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), searchword=word, Prediction=prediction)
+            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), Prediction=prediction)
+        else :
+            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), Prediction=prediction)
     else :
-        return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"))
+        doc = nlp(Text)
+        articles = Articles()
+        print(f"Read Content in File : {filename} Success")
+        TFIDF = tfidf_top_5(articles)
+        BOW = bow_top_5(articles)
+        prediction = get_prediction(Text, convert_to_label=True)
+        if request.method == "POST" :
+            if "checkbox" in request.form :
+                options = {"ents": request.form.getlist('checkbox')}
+                return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent", options=options), Prediction=prediction)
+            if "search" in request.form :
+                print(f"Search : {request.form.get('search')}")
+                word = Search(articles,request.form.get('search'))
+                return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), searchword=word, Prediction=prediction)
+            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), Prediction=prediction)
+        else :
+            return render_template('function.html', FileName=filename, TextContent=Text, TFIDF=TFIDF, Bow=BOW, TextContentNer=displacy.render(doc, style="ent"), Prediction=prediction)
+
+def get_prediction(text, convert_to_label=False):
+    # prepare our text into tokenized sequence
+    inputs = tokenizer(text, padding=True, truncation=True, max_length=512, return_tensors="pt")
+    # perform inference to our model
+    outputs = model(**inputs)
+    # get output probabilities by doing softmax
+    probs = outputs[0].softmax(1)
+    # executing argmax function to get the candidate label
+    d = {
+        0: "reliable",
+        1: "fake"
+    }
+    if convert_to_label:
+        print("Prediction Success")
+        return d[int(probs.argmax())]
+    else:
+        print("Prediction Success")
+        return int(probs.argmax())
 
 def Search(articles, word) :
     article = (articles[1])
@@ -101,35 +152,64 @@ def Search(articles, word) :
         return f"{word} have {article.count(word.lower())} word."
     return f"Not have {word} word in file."
 
-def Articles(Filename) :
+def Articles() :
+    global filename, Text
     articles = [[]]
-    f = open(f"Project_NLP/Upload/{Filename}", "r")
+    if filename != "" :
+        f = open(f"Project_NLP/Upload/{filename}", "r")
 
-    article = f.read()
+        article = f.read()
 
-    #Tokenize the article : tokens
-    tokens = word_tokenize(article)
+        #Tokenize the article : tokens
+        tokens = word_tokenize(article)
 
-    #Convert the tokens into lowercase : lower_tokens
-    lower_tokens = [t.lower() for t in tokens]
+        #Convert the tokens into lowercase : lower_tokens
+        lower_tokens = [t.lower() for t in tokens]
 
-    #Retain alphabetic words : alpha_only
-    alpha_only = [t for t in lower_tokens if t.isalpha()]
+        #Retain alphabetic words : alpha_only
+        alpha_only = [t for t in lower_tokens if t.isalpha()]
 
-    #Remove all stop words : no_stops
-    no_stops = [t for t in alpha_only if t not in stopwords.words('english')]
+        #Remove all stop words : no_stops
+        no_stops = [t for t in alpha_only if t not in stopwords.words('english')]
 
-    # Instantiate the WordNetLemmatizer
-    wordnet_lemmatizer = WordNetLemmatizer()
+        # Instantiate the WordNetLemmatizer
+        wordnet_lemmatizer = WordNetLemmatizer()
+        
+        #Lemmatize all tokens into a new list : lemmatized
+        lemmatized = [wordnet_lemmatizer.lemmatize(t) for t in no_stops]
 
-    #Lemmatize all tokens into a new list : lemmatized
-    lemmatized = [wordnet_lemmatizer.lemmatize(t) for t in no_stops]
+        articles.append(lemmatized)
 
-    articles.append(lemmatized)
+        print(f'Find Word Tokens in File : {filename} Success')
 
-    print(f'Find Word Tokens in File : {Filename} Success')
+        return articles
+    else :
 
-    return articles
+        article = Text
+
+        #Tokenize the article : tokens
+        tokens = word_tokenize(article)
+
+        #Convert the tokens into lowercase : lower_tokens
+        lower_tokens = [t.lower() for t in tokens]
+
+        #Retain alphabetic words : alpha_only
+        alpha_only = [t for t in lower_tokens if t.isalpha()]
+
+        #Remove all stop words : no_stops
+        no_stops = [t for t in alpha_only if t not in stopwords.words('english')]
+
+        # Instantiate the WordNetLemmatizer
+        wordnet_lemmatizer = WordNetLemmatizer()
+
+        #Lemmatize all tokens into a new list : lemmatized
+        lemmatized = [wordnet_lemmatizer.lemmatize(t) for t in no_stops]
+
+        articles.append(lemmatized)
+
+        print(f'Find Word Tokens in File : {filename} Success')
+
+        return articles
 
 def tfidf_top_5(articles) :
     #Create a Dictionary from the articles : dictionary
